@@ -1,4 +1,5 @@
-﻿using Domain.Dtos;
+﻿using Application.Abstractions;
+using Domain.Dtos;
 using Domain.IRepositories;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers;
@@ -8,8 +9,28 @@ namespace Api.Controllers
     [Route("api/Shift")]
     public class ShiftController : ApiBaseController<ShiftDto>
     {
-        public ShiftController(IShiftRepository repository) : base(repository)
+        private readonly ILoadShifts _loadShifts;
+        private readonly IShiftImportService _shiftImportService;
+
+        public ShiftController(IShiftRepository repository, ILoadShifts loadShifts, IShiftImportService shiftImportService)
+            : base(repository)
         {
+            _loadShifts = loadShifts;
+            _shiftImportService = shiftImportService;
+        }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> Import(IFormFile file, CancellationToken cancellationToken = default)
+        {
+            if (file is null || file.Length == 0)
+                return BadRequest("A non-empty Excel file is required");
+
+            var shifts = await _loadShifts.LoadShiftsFromFile(file);
+            var errors = await _shiftImportService.ImportAsync(shifts, cancellationToken);
+
+            return errors.Count == 0
+                ? Ok(new { imported = shifts.Count })
+                : BadRequest(new { errors });
         }
     }
 }

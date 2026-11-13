@@ -14,7 +14,18 @@ namespace Infrastructure.Domain.Repositories
 
         public async Task<List<ShiftDto>> GetShiftsByCollaboratorAndDate(string email, DateOnly date)
         {
-            return await GetByQueryAsync(["Collaborator"], null, (a) => a.Collaborator.Email == email && a.Date == date);
+            return await GetByQueryAsync(["Collaborator"], null, (a) => a.Collaborator!.Email == email && a.Date == date);
+        }
+
+        public Task<List<ShiftDto>> GetShiftsByCollaboratorsAndDateRangeAsync(
+            IReadOnlyCollection<Guid> collaboratorIds,
+            DateOnly from,
+            DateOnly to,
+            CancellationToken cancellationToken = default)
+        {
+            return GetByQueryAsync(
+                predicate: s => collaboratorIds.Contains(s.CollaboratorId) && s.Date >= from && s.Date <= to,
+                cancellationToke: cancellationToken);
         }
     }
 }

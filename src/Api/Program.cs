@@ -1,4 +1,5 @@
 using Application.Abstractions;
+using Application.Services;
 using AutoMapper.Extensions.ExpressionMapping;
 using Domain.Dtos;
 using Domain.IRepositories;
@@ -20,6 +21,8 @@ builder.Services.Configure<HolidaySettings>(builder.Configuration.GetSection(Hol
 
 builder.Services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
+builder.Services.AddScoped<IShiftImportService, ShiftImportService>();
 
 builder.Services.AddAutoMapper(configuration =>
 {
@@ -34,10 +37,8 @@ builder.Services.AddScoped<ILoadShifts, LoadExcelShifts>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Enable Swagger UI in development  
     app.UseSwagger();
     app.UseSwaggerUI();
     app.MapOpenApi();

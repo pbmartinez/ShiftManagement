@@ -18,13 +18,10 @@ namespace Domain.Dtos
         [Required]
         public TimeOnly EndTime { get; set; }
 
-        public bool IntersectsWith(ShiftDto anotherShift)
-        {
-            if (CollaboratorId != anotherShift.CollaboratorId || Date != anotherShift.Date)
-                return false;
-            return (anotherShift.StartTime >= StartTime && anotherShift.StartTime <= EndTime) ||
-                (anotherShift.EndTime >= StartTime && anotherShift.EndTime <= EndTime);
-        }
+        public bool OverlapsWith(ShiftDto other) =>
+            Date == other.Date &&
+            other.StartTime < EndTime &&
+            StartTime < other.EndTime;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
