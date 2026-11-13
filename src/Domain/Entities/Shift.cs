@@ -6,7 +6,7 @@ namespace Domain.Entities
     {
         public Guid CollaboratorId { get; set; }
                 
-        public Collaborator Collaborator { get; set; }
+        public Collaborator? Collaborator { get; set; }
         
         [Required]
         public DateOnly Date { get; set; }

@@ -7,7 +7,7 @@ namespace Domain.Dtos
     {
         public Guid CollaboratorId { get; set; }
 
-        public CollaboratorDto Collaborator { get; set; }
+        public CollaboratorDto? Collaborator { get; set; }
 
         [Required]
         public DateOnly Date { get; set; }
