@@ -1,4 +1,5 @@
 ﻿using Domain.Dtos;
+using System.Linq.Expressions;
 
 namespace Domain.IRepositories
 {
@@ -12,6 +13,9 @@ namespace Domain.IRepositories
         Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
         Task<int> CommitChangesAsync(CancellationToken cancellationToken = default);
+
+        Task<List<TDto>> GetByQueryAsync(List<string>? includes = null, Dictionary<string, bool>? order = null, Expression<Func<TDto, bool>>? predicate = null, CancellationToken cancellationToke = default);
+        
 
     }
 }

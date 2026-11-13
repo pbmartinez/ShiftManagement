@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using AutoMapper.Extensions.ExpressionMapping;
 using Domain.Dtos;
 using Domain.Entities;
 using Domain.IRepositories;
 using Infrastructure.Domain.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Domain.Repositories
 {
@@ -20,9 +22,13 @@ namespace Infrastructure.Domain.Repositories
             _mapper = mapper;
         }
 
-        private IQueryable<TEntity> Query(List<string>? includes, Dictionary<string, bool>? order = null)
+        private IQueryable<TEntity> Query(List<string>? includes, Dictionary<string, bool>? order = null, Expression<Func<TDto, bool>>? predicate = null)
         {
             IQueryable<TEntity> query = UnitOfWork.Set<TEntity>();
+
+            if (predicate is not null)
+                query = query.Where(_mapper.MapExpression<Expression<Func<TEntity, bool>>>(predicate));
+
             foreach (var include in includes ?? [])
                 query = query.Include(include);
 
@@ -44,6 +50,12 @@ namespace Infrastructure.Domain.Repositories
         {
             var entity = Query(includes).FirstOrDefault(e => e.Id == id);
             return entity is null ? null : _mapper.Map<TDto>(entity);
+        }
+
+        public async Task<List<TDto>> GetByQueryAsync(List<string>? includes = null, Dictionary<string, bool>? order = null, Expression<Func<TDto, bool>>? predicate = null, CancellationToken cancellationToke = default)
+        {
+            var entities = await Query(includes,order,predicate).ToListAsync(cancellationToke);
+            return _mapper.Map<List<TDto>>(entities);
         }
 
         public async Task<List<TDto>> GetAllAsync(List<string>? includes = null, Dictionary<string, bool>? order = null, CancellationToken cancellationToken = default)
