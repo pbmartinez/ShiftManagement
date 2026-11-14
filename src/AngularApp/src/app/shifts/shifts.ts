@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTimepickerModule } from '@angular/material/timepicker';
@@ -30,7 +31,7 @@ type ShiftFilters = Shifts['filters']['value'];
 @Component({
   selector: 'app-shifts',
   imports: [
-    ReactiveFormsModule, MatTableModule, MatSortModule, MatButtonModule, MatIconModule, MatTooltipModule,
+    ReactiveFormsModule, MatTableModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatIconModule, MatTooltipModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatTimepickerModule,
   ],
   templateUrl: './shifts.html',
@@ -41,6 +42,7 @@ export class Shifts {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly sort = viewChild.required(MatSort);
+  private readonly paginator = viewChild.required(MatPaginator);
 
   protected readonly columns = ['collaborator', 'date', 'startTime', 'endTime', 'actions'];
   protected readonly importColumns = ['who', 'date', 'start', 'end', 'message'];
@@ -70,6 +72,7 @@ export class Shifts {
 
   constructor() {
     effect(() => (this.dataSource.sort = this.sort()));
+    effect(() => (this.dataSource.paginator = this.paginator()));
     effect(() => (this.dataSource.data = this.rows()));
 
     this.dataSource.filterPredicate = row => this.filters.valid ? matches(row, this.filters.getRawValue()) : true;

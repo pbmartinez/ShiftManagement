@@ -46,7 +46,8 @@
   margin: 0 0 12px;
 }
 
-.dialog-form {
+/* "mat-dialog-content." so it wins over Material's own display: block on the dialog content */
+mat-dialog-content.dialog-form {
   display: flex;
   flex-direction: column;
   min-width: 360px;

@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -16,13 +17,14 @@ import { CollaboratorDialog } from './collaborator-dialog';
 
 @Component({
   selector: 'app-collaborators',
-  imports: [ReactiveFormsModule, MatTableModule, MatSortModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatTooltipModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatTooltipModule],
   templateUrl: './collaborators.html',
 })
 export class Collaborators {
   private readonly api = inject(CollaboratorApi);
   private readonly dialog = inject(MatDialog);
   private readonly sort = viewChild.required(MatSort);
+  private readonly paginator = viewChild.required(MatPaginator);
 
   protected readonly columns = ['name', 'email', 'country', 'actions'];
   protected readonly dataSource = new MatTableDataSource<Collaborator>();
@@ -37,6 +39,7 @@ export class Collaborators {
 
   constructor() {
     effect(() => (this.dataSource.sort = this.sort()));
+    effect(() => (this.dataSource.paginator = this.paginator()));
     // Every filled-in box must be contained (ignoring case) in that column.
     this.dataSource.filterPredicate = (row, _) => Object.entries(this.filters.getRawValue())
       .every(([field, text]) => row[field as keyof Collaborator].toLowerCase().includes(text.trim().toLowerCase()));
