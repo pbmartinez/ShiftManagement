@@ -18,5 +18,7 @@
       <BuildDependency Project="Domain/Domain.csproj" />
     </Project>
   </Folder>
-  <Folder Name="/4-Tests/" />
+  <Folder Name="/4-Tests/">
+    <Project Path="Tests/Tests.csproj" />
+  </Folder>
 </Solution>
