@@ -11,6 +11,7 @@ namespace Domain.Dtos
         public string Email { get; set; }
 
         [Required]
+        [RegularExpression("^[A-Z]{2}$", ErrorMessage = "Country must be a 2-letter code, e.g. UY")]
         public string Country { get; set; }
 
         public ICollection<ShiftDto> Shifts { get; set; } = [];

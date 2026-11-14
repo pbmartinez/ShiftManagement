@@ -41,6 +41,21 @@
   white-space: nowrap;
 }
 
+/* Shifts that fall on a holiday in the collaborator's country */
+.grid tr.holiday {
+  background: var(--mat-sys-tertiary-container);
+}
+
+.holiday-icon {
+  vertical-align: middle;
+  margin-left: 4px;
+  color: var(--mat-sys-tertiary);
+}
+
+.holiday-hint {
+  color: var(--mat-sys-tertiary);
+}
+
 .form-errors {
   color: var(--mat-sys-error);
   margin: 0 0 12px;

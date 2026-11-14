@@ -18,6 +18,9 @@ namespace Domain.Dtos
         [Required]
         public TimeOnly EndTime { get; set; }
 
+        /// <summary>Output only: the holiday's name when the shift falls on one in the collaborator's country.</summary>
+        public string? Holiday { get; set; }
+
         public bool OverlapsWith(ShiftDto other) =>
             Date == other.Date &&
             other.StartTime < EndTime &&

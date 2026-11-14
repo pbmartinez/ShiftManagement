@@ -22,6 +22,7 @@
       <input matInput [matDatepicker]="datePicker" formControlName="date" />
       <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
       <mat-datepicker #datePicker />
+      @if (holiday()) { <mat-hint class="holiday-hint">{{ holiday() }}</mat-hint> }
       @if (form.controls.date.hasError('required')) { <mat-error>Date is required</mat-error> }
       @if (form.controls.date.hasError('matDatepickerParse')) { <mat-error>Not a valid date</mat-error> }
       @if (form.controls.date.hasError('server')) { <mat-error>{{ form.controls.date.getError('server') }}</mat-error> }

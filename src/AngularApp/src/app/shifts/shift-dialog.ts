@@ -1,5 +1,6 @@
-import { Observable } from 'rxjs';
+import { catchError, map, merge, Observable, of, startWith, switchMap } from 'rxjs';
 import { Component, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -8,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTimepickerModule } from '@angular/material/timepicker';
+import { HolidayApi } from '../api/holiday-api';
 import { Collaborator, NEW_ID, Shift } from '../api/models';
 import { ShiftApi } from '../api/shift-api';
 import { fromDateString, fromTimeString, toDateString, toTimeString } from '../shared/dates';
@@ -26,6 +28,7 @@ export interface ShiftDialogData {
 })
 export class ShiftDialog {
   private readonly api = inject(ShiftApi);
+  private readonly holidayApi = inject(HolidayApi);
   private readonly dialogRef = inject(MatDialogRef<ShiftDialog>);
   protected readonly data = inject<ShiftDialogData>(MAT_DIALOG_DATA);
 
@@ -39,6 +42,22 @@ export class ShiftDialog {
     startTime: new FormControl(this.data.shift ? fromTimeString(this.data.shift.startTime) : null, Validators.required),
     endTime: new FormControl(this.data.shift ? fromTimeString(this.data.shift.endTime) : null, [Validators.required, endAfterStart]),
   });
+
+  // Live check, before saving: is the chosen date a holiday in the collaborator's country? Only a warning.
+  protected readonly holiday = toSignal(
+    merge(this.form.controls.collaboratorId.valueChanges, this.form.controls.date.valueChanges).pipe(
+      startWith(null),
+      switchMap(() => {
+        const { collaboratorId, date } = this.form.getRawValue();
+        const country = this.data.collaborators.find(c => c.id === collaboratorId)?.country;
+        if (!country || !date)
+          return of(null);
+        return this.holidayApi.get(country, date.getFullYear()).pipe(
+          map(holidays => holidays.find(h => h.date === toDateString(date))),
+          map(h => (h ? `Holiday in ${country}: ${h.name}` : null)),
+          catchError(() => of(null)));
+      })),
+    { initialValue: null });
 
   constructor() {
     this.form.controls.startTime.valueChanges.subscribe(() => this.form.controls.endTime.updateValueAndValidity());

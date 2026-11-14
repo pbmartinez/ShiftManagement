@@ -23,7 +23,11 @@
 
     <mat-form-field>
       <mat-label>Country</mat-label>
-      <input matInput formControlName="country" />
+      <mat-select formControlName="country">
+        @for (c of countries(); track c.countryCode) {
+          <mat-option [value]="c.countryCode">{{ c.name }} ({{ c.countryCode }})</mat-option>
+        }
+      </mat-select>
       @if (form.controls.country.hasError('required')) { <mat-error>Country is required</mat-error> }
       @if (form.controls.country.hasError('server')) { <mat-error>{{ form.controls.country.getError('server') }}</mat-error> }
     </mat-form-field>

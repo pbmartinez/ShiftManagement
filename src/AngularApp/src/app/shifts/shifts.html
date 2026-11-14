@@ -97,7 +97,10 @@
   </ng-container>
   <ng-container matColumnDef="date">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-    <td mat-cell *matCellDef="let s">{{ s.date }}</td>
+    <td mat-cell *matCellDef="let s">
+      {{ s.date }}
+      @if (s.holiday) { <mat-icon class="holiday-icon" [matTooltip]="s.holiday">celebration</mat-icon> }
+    </td>
   </ng-container>
   <ng-container matColumnDef="startTime">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Start</th>
@@ -116,7 +119,7 @@
   </ng-container>
 
   <tr mat-header-row *matHeaderRowDef="columns"></tr>
-  <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns" [class.holiday]="row.holiday"></tr>
   <tr class="mat-row" *matNoDataRow>
     <td class="empty" [attr.colspan]="columns.length">No shifts</td>
   </tr>

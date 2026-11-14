@@ -9,6 +9,9 @@ using Infrastructure.Application;
 using Infrastructure.Domain.Repositories;
 using Infrastructure.Domain.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Options;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +42,12 @@ builder.Services.AddAutoMapper(configuration =>
     AppDomain.CurrentDomain.GetAssemblies();
 });
 
-builder.Services.AddScoped<IHolidayDates, HolidayDates>();
+// Nager.Date client: answers cached in memory, failed calls retried by Polly (settings in HolidaySettings:Retry).
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IHolidayDates, HolidayDates>((sp, client) =>
+        client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<HolidaySettings>>().Value.NagerEndpoint))
+    .AddResilienceHandler("nager", pipeline => pipeline.AddRetry(
+        builder.Configuration.GetSection("HolidaySettings:Retry").Get<HttpRetryStrategyOptions>()!));
 builder.Services.AddScoped<ILoadShifts, LoadExcelShifts>();
 builder.Services.AddScoped<IExportShifts, ExportExcelShifts>();
 
