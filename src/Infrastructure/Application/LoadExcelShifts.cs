@@ -19,22 +19,24 @@ namespace Infrastructure.Application
             using (var workbook = new XLWorkbook(memoryStream))
             {
                 var worksheet = workbook.Worksheets.First();
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+                var rows = worksheet.RangeUsed()!.RowsUsed().Skip(1);
 
                 foreach (var row in rows)
                 {
                     extractedData.Add(new ShiftDto
                     {
                         Id = Guid.NewGuid(),
-                        Collaborator = new CollaboratorDto() { Id = Guid.NewGuid(), Email = row.Cell(1).GetValue<string>() },
-                        Date = row.Cell(2).GetValue<DateOnly>(),
-                        StartTime = row.Cell(3).GetValue<TimeOnly>(),
-                        EndTime = row.Cell(4).GetValue<TimeOnly>()
+                        Collaborator = new CollaboratorDto() { Id = Guid.NewGuid(), Email = row.Cell(1).GetString() },
+                        Date = DateOnly.FromDateTime(ReadDateTime(row.Cell(2))),
+                        StartTime = TimeOnly.FromDateTime(ReadDateTime(row.Cell(3))),
+                        EndTime = TimeOnly.FromDateTime(ReadDateTime(row.Cell(4)))
                     });
                 }
             }
             return extractedData;
         }
 
+        private static DateTime ReadDateTime(IXLCell cell) =>
+            cell.Value.IsDateTime ? cell.GetDateTime() : DateTime.Parse(cell.GetString());
     }
 }
