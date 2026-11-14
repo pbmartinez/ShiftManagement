@@ -6,7 +6,7 @@ using WebApi.Controllers;
 
 namespace Api.Controllers
 {
-    [Route("api/Shift")]
+    [Route("api/shift")]
     public class ShiftController : ApiBaseController<ShiftDto>
     {
         private const string ExcelContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
