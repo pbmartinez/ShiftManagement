@@ -10,6 +10,7 @@ namespace Domain.Mappings
         {
             CreateMap<Shift, ShiftDto>()
                 .ForMember(g => g.Collaborator, options => options.MapFrom(f => f.Collaborator))
+                .ForMember(g => g.Holiday, options => options.Ignore())
                 .ReverseMap()
                 .ForMember(e => e.Collaborator, options => options.Ignore());
         }

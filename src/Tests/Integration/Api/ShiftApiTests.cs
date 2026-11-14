@@ -84,6 +84,17 @@ namespace Tests.Integration.WithDatabase
         }
 
         [Test]
+        public async Task Get_FlagsTheShiftsOnAHoliday()
+        {
+            await TestDatabase.AddShiftsAsync("ana@x.com|2027-01-01|09:00|10:00");
+
+            var shifts = await _client.GetFromJsonAsync<List<ShiftDto>>("api/Shift");
+
+            shifts!.Select(s => $"{s.Date:yyyy-MM-dd} {s.Holiday}").Should().BeEquivalentTo(
+                "2026-11-13 ", "2026-11-13 ", "2027-01-01 New Year's Day");
+        }
+
+        [Test]
         public async Task Export_ReturnsEveryShiftAsAnExcelFile()
         {
             var response = await _client.GetAsync("api/Shift/export");

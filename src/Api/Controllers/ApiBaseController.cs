@@ -1,4 +1,5 @@
-﻿using Application.Abstractions;
+using System.ComponentModel.DataAnnotations;
+using Application.Abstractions;
 using Domain.Dtos;
 using Domain.IRepositories;
 using Microsoft.AspNetCore.JsonPatch;
@@ -97,10 +98,12 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        protected ActionResult BusinessErrors(List<string> errors)
+        protected ActionResult BusinessErrors(List<ValidationResult> errors)
         {
+            // Keyed by field (e.g. "StartTime") so the UI can show the error under that input; "" when it has no field.
             foreach (var error in errors)
-                ModelState.AddModelError(string.Empty, error);
+                foreach (var field in error.MemberNames.DefaultIfEmpty(string.Empty))
+                    ModelState.AddModelError(field, error.ErrorMessage!);
             return ValidationProblem(ModelState);
         }
 

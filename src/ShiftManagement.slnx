@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/1-Presentation/">
+    <Project Path="AngularApp/AngularApp.esproj">
+      <Build />
+      <Deploy />
+    </Project>
     <Project Path="Api/Api.csproj">
       <BuildDependency Project="Application/Application.csproj" />
       <BuildDependency Project="Domain/Domain.csproj" />

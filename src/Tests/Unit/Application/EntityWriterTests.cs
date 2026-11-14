@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using Application.Abstractions;
 using Application.Services;
 using Domain.IRepositories;
+using FluentAssertions.Execution;
 
 namespace Tests.Unit
 {
@@ -23,8 +25,8 @@ namespace Tests.Unit
             _unitOfWork = new Mock<IUnitOfWork>();
             _unitOfWork
                 .Setup(u => u.ExecuteInTransactionAsync(
-                    It.IsAny<Func<CancellationToken, Task<List<string>>>>(), It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()))
-                .Returns((Func<CancellationToken, Task<List<string>>> operation, IsolationLevel _, CancellationToken ct) => operation(ct));
+                    It.IsAny<Func<CancellationToken, Task<List<ValidationResult>>>>(), It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()))
+                .Returns((Func<CancellationToken, Task<List<ValidationResult>>> operation, IsolationLevel _, CancellationToken ct) => operation(ct));
 
             _writer = new EntityWriter<ShiftDto>(_repository.Object, [_validator.Object], _unitOfWork.Object);
         }
@@ -32,7 +34,7 @@ namespace Tests.Unit
         private void GivenValidatorErrors(params string[] errors) =>
             _validator
                 .Setup(v => v.ValidateAsync(It.IsAny<IReadOnlyList<ShiftDto>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(errors.ToList());
+                .ReturnsAsync(errors.Select(e => new ValidationResult(e)).ToList());
 
         private static ShiftDto[] Shifts(int count, string times = "09:00|10:00") =>
             Enumerable.Range(1, count).Select(day => TestData.Shift($"2026-11-{day:00}|{times}")).ToArray();
@@ -47,7 +49,7 @@ namespace Tests.Unit
             _repository.Verify(r => r.AddAsync(It.IsAny<ShiftDto>(), It.IsAny<CancellationToken>()), Times.Exactly(count));
             _repository.Verify(r => r.CommitChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             _unitOfWork.Verify(u => u.ExecuteInTransactionAsync(
-                It.IsAny<Func<CancellationToken, Task<List<string>>>>(), IsolationLevel.Serializable, It.IsAny<CancellationToken>()), Times.Once);
+                It.IsAny<Func<CancellationToken, Task<List<ValidationResult>>>>(), IsolationLevel.Serializable, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -66,7 +68,11 @@ namespace Tests.Unit
         {
             var errors = await _writer.AddAsync(Shifts(count, "10:00|09:00"));
 
-            errors.Should().HaveCount(count).And.StartWith(expectedFirstError);
+            using (new AssertionScope())
+            {
+                errors.Select(e => e.ErrorMessage).Should().HaveCount(count).And.StartWith(expectedFirstError);
+                errors[0].MemberNames.Should().Equal("StartTime", "EndTime");
+            }
             _unitOfWork.VerifyNoOtherCalls();
             _repository.VerifyNoOtherCalls();
         }
@@ -78,7 +84,7 @@ namespace Tests.Unit
 
             var errors = await _writer.AddAsync(Shifts(1));
 
-            errors.Should().Equal("rule broken");
+            errors.Select(e => e.ErrorMessage).Should().Equal("rule broken");
             _repository.VerifyNoOtherCalls();
         }
 

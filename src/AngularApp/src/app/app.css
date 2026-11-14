@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  gap: 8px;
+}
+
+.toolbar button {
+  color: inherit;
+}
+
+.container {
+  flex: 1;
+}
+
+mat-sidenav {
+  width: 220px;
+}
+
+.content {
+  padding: 24px;
+}

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Application.Abstractions;
 using Domain.Dtos;
 using Domain.IRepositories;
@@ -8,14 +9,14 @@ namespace Application.Services
         ICollaboratorRepository collaboratorRepository,
         IEntityWriter<ShiftDto> writer) : IShiftImportService
     {
-        public async Task<List<string>> ImportAsync(List<ShiftDto> shifts, CancellationToken cancellationToken = default)
+        public async Task<List<ValidationResult>> ImportAsync(List<ShiftDto> shifts, CancellationToken cancellationToken = default)
         {
             if (shifts.Count == 0)
-                return ["The file contains no shifts"];
+                return [new("The file contains no shifts")];
 
             var errors = shifts
                 .Where(s => string.IsNullOrWhiteSpace(EmailOf(s)))
-                .Select(s => $"{s}: collaborator email is missing")
+                .Select(s => new ValidationResult($"{s}: collaborator email is missing"))
                 .ToList();
             if (errors.Count > 0)
                 return errors;
@@ -29,7 +30,7 @@ namespace Application.Services
 
             errors.AddRange(emails
                 .Where(e => !collaboratorIdByEmail.ContainsKey(e))
-                .Select(e => $"No collaborator found with email {e}"));
+                .Select(e => new ValidationResult($"No collaborator found with email {e}")));
             if (errors.Count > 0)
                 return errors;
 

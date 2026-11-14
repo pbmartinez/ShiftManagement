@@ -1,0 +1,127 @@
+<div class="page-header">
+  <h1>Shifts</h1>
+  <button mat-flat-button (click)="open()"><mat-icon>add</mat-icon> New shift</button>
+  <input #fileInput type="file" accept=".xlsx" hidden (change)="import(fileInput)" />
+  <button mat-stroked-button (click)="fileInput.click()" matTooltip="Columns: Email, Date, Start, End">
+    <mat-icon>upload</mat-icon> Import
+  </button>
+  <button mat-stroked-button (click)="export()" [disabled]="filters.invalid" matTooltip="Exports the shifts shown below, as filtered and sorted">
+    <mat-icon>download</mat-icon> Export
+  </button>
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Collaborator</mat-label>
+    <mat-select formControlName="collaboratorId">
+      <mat-option [value]="null">All</mat-option>
+      @for (c of collaborators(); track c.id) {
+        <mat-option [value]="c.id">{{ c.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>From</mat-label>
+    <input matInput [matDatepicker]="fromPicker" formControlName="from" />
+    <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+    <mat-datepicker #fromPicker />
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>To</mat-label>
+    <input matInput [matDatepicker]="toPicker" formControlName="to" />
+    <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+    <mat-datepicker #toPicker />
+    @if (filters.controls.to.hasError('toBeforeFrom')) { <mat-error>To can't be before From</mat-error> }
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Starts at or after</mat-label>
+    <input matInput [matTimepicker]="startFromPicker" formControlName="startFrom" />
+    <mat-timepicker-toggle matIconSuffix [for]="startFromPicker" />
+    <mat-timepicker #startFromPicker interval="30m" />
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Ends at or before</mat-label>
+    <input matInput [matTimepicker]="endUntilPicker" formControlName="endUntil" />
+    <mat-timepicker-toggle matIconSuffix [for]="endUntilPicker" />
+    <mat-timepicker #endUntilPicker interval="30m" />
+  </mat-form-field>
+
+  <button mat-button type="button" (click)="filters.reset()">Clear</button>
+</form>
+
+@if (error()) {
+  <p class="form-errors">{{ error() }}</p>
+}
+
+@if (importErrors().length) {
+  <section class="import-errors">
+    <div class="page-header">
+      <h2>The file was not imported, nothing was saved. Fix these rows and import it again:</h2>
+      <button mat-icon-button matTooltip="Dismiss" (click)="importErrors.set([])"><mat-icon>close</mat-icon></button>
+    </div>
+    <table mat-table [dataSource]="importErrors()" class="grid">
+      <ng-container matColumnDef="who">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let e">{{ e.who }}</td>
+      </ng-container>
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef>Date</th>
+        <td mat-cell *matCellDef="let e">{{ e.date }}</td>
+      </ng-container>
+      <ng-container matColumnDef="start">
+        <th mat-header-cell *matHeaderCellDef>Start</th>
+        <td mat-cell *matCellDef="let e">{{ e.start }}</td>
+      </ng-container>
+      <ng-container matColumnDef="end">
+        <th mat-header-cell *matHeaderCellDef>End</th>
+        <td mat-cell *matCellDef="let e">{{ e.end }}</td>
+      </ng-container>
+      <ng-container matColumnDef="message">
+        <th mat-header-cell *matHeaderCellDef>Error</th>
+        <td mat-cell *matCellDef="let e">{{ e.message }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="importColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: importColumns"></tr>
+    </table>
+  </section>
+}
+
+<table mat-table [dataSource]="dataSource" matSort class="grid">
+  <ng-container matColumnDef="collaborator">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Collaborator</th>
+    <td mat-cell *matCellDef="let s">{{ s.collaborator }}</td>
+  </ng-container>
+  <ng-container matColumnDef="date">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+    <td mat-cell *matCellDef="let s">
+      {{ s.date }}
+      @if (s.holiday) { <mat-icon class="holiday-icon" [matTooltip]="s.holiday">celebration</mat-icon> }
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="startTime">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Start</th>
+    <td mat-cell *matCellDef="let s">{{ s.startTime.slice(0, 5) }}</td>
+  </ng-container>
+  <ng-container matColumnDef="endTime">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>End</th>
+    <td mat-cell *matCellDef="let s">{{ s.endTime.slice(0, 5) }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef></th>
+    <td mat-cell *matCellDef="let s" class="actions">
+      <button mat-icon-button matTooltip="Edit" (click)="open(s)"><mat-icon>edit</mat-icon></button>
+      <button mat-icon-button matTooltip="Delete" (click)="remove(s)"><mat-icon>delete</mat-icon></button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns" [class.holiday]="row.holiday"></tr>
+  <tr class="mat-row" *matNoDataRow>
+    <td class="empty" [attr.colspan]="columns.length">No shifts</td>
+  </tr>
+</table>
+<mat-paginator [pageSizeOptions]="[10, 25, 50]" pageSize="10" showFirstLastButtons />

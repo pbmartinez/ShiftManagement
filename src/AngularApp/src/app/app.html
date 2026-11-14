@@ -1,0 +1,23 @@
+<mat-toolbar class="toolbar">
+  <button mat-icon-button (click)="drawer.toggle()" aria-label="Toggle menu">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Shift Management</span>
+</mat-toolbar>
+
+<mat-sidenav-container class="container">
+  <mat-sidenav #drawer mode="side" opened>
+    <mat-nav-list>
+      @for (item of menu; track item.path) {
+        <a mat-list-item [routerLink]="item.path" routerLinkActive #link="routerLinkActive" [activated]="link.isActive">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

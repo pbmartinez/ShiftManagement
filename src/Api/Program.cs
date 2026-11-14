@@ -9,6 +9,9 @@ using Infrastructure.Application;
 using Infrastructure.Domain.Repositories;
 using Infrastructure.Domain.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Options;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,24 +42,37 @@ builder.Services.AddAutoMapper(configuration =>
     AppDomain.CurrentDomain.GetAssemblies();
 });
 
-builder.Services.AddScoped<IHolidayDates, HolidayDates>();
+// Nager.Date client: answers cached in memory, failed calls retried by Polly (settings in HolidaySettings:Retry).
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IHolidayDates, HolidayDates>((sp, client) =>
+        client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<HolidaySettings>>().Value.NagerEndpoint))
+    .AddResilienceHandler("nager", pipeline => pipeline.AddRetry(
+        builder.Configuration.GetSection("HolidaySettings:Retry").Get<HttpRetryStrategyOptions>()!));
 builder.Services.AddScoped<ILoadShifts, LoadExcelShifts>();
 builder.Services.AddScoped<IExportShifts, ExportExcelShifts>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
-}
+// Creates or updates the database schema on start, so a fresh database (e.g. docker compose) needs no extra step.
+using (var scope = app.Services.CreateScope())
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+
+// Serves the built Angular app (wwwroot) in production, so UI and API share one origin.
+app.UseDefaultFiles();
+app.MapStaticAssets();
+
+// API docs in every environment: Swagger UI at /swagger, OpenAPI document at /openapi/v1.json.
+app.UseSwagger();
+app.UseSwaggerUI();
+app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapFallbackToFile("/index.html");
 
 app.Run();
 

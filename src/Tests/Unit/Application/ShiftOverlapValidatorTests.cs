@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Application.Validators;
 using Domain.IRepositories;
 
@@ -22,7 +23,7 @@ namespace Tests.Unit
                     It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(shifts.ToList());
 
-        private Task<List<string>> Validate(params ShiftDto[] shifts) =>
+        private Task<List<ValidationResult>> Validate(params ShiftDto[] shifts) =>
             _validator.ValidateAsync(shifts, CancellationToken.None);
 
         [TestCase(1, "ana@x.com|2026-11-13|09:00|11:00", "ana@x.com|2026-11-13|10:00|12:00", TestName = "two overlapping shifts")]
@@ -36,7 +37,7 @@ namespace Tests.Unit
 
             // NotContain(not ...) instead of OnlyContain: OnlyContain fails on an empty list.
             errors.Should().HaveCount(expectedErrors)
-                .And.NotContain(e => !e.EndsWith("in the same request"));
+                .And.NotContain(e => !e.ErrorMessage!.EndsWith("in the same request"));
         }
 
         [TestCase("ana@x.com", "09:30", "10:30", false, 1, TestName = "overlaps an existing shift")]
@@ -51,7 +52,9 @@ namespace Tests.Unit
 
             var errors = await Validate(incoming);
 
-            errors.Should().Equal(Enumerable.Repeat($"{incoming}: overlaps existing shift {existing}", expectedErrors));
+            errors.Select(e => e.ErrorMessage).Should().Equal(Enumerable.Repeat($"{incoming}: overlaps existing shift {existing}", expectedErrors));
+            // Keyed to the time fields, so the UI can show it under Start and End.
+            errors.Should().NotContain(e => !e.MemberNames.SequenceEqual(new[] { "StartTime", "EndTime" }));
         }
 
         [Test]

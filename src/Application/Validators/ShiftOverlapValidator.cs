@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Application.Abstractions;
 using Domain.Dtos;
 using Domain.IRepositories;
@@ -6,7 +7,7 @@ namespace Application.Validators
 {
     public class ShiftOverlapValidator(IShiftRepository shiftRepository) : IBusinessValidator<ShiftDto>
     {
-        public async Task<List<string>> ValidateAsync(IReadOnlyList<ShiftDto> shifts, CancellationToken cancellationToken)
+        public async Task<List<ValidationResult>> ValidateAsync(IReadOnlyList<ShiftDto> shifts, CancellationToken cancellationToken)
         {
             if (shifts.Count == 0)
                 return [];
@@ -26,14 +27,14 @@ namespace Application.Validators
 
             foreach (var shift in shifts)
                 foreach (var conflict in existingByCollaboratorAndDate[(shift.CollaboratorId, shift.Date)].Where(shift.OverlapsWith))
-                    errors.Add($"{shift}: overlaps existing shift {conflict}");
+                    errors.Add(Overlap($"{shift}: overlaps existing shift {conflict}"));
 
             return errors;
         }
 
-        private static List<string> FindOverlapsInsideBatch(IReadOnlyList<ShiftDto> shifts)
+        private static List<ValidationResult> FindOverlapsInsideBatch(IReadOnlyList<ShiftDto> shifts)
         {
-            var errors = new List<string>();
+            var errors = new List<ValidationResult>();
             foreach (var group in shifts.GroupBy(s => (s.CollaboratorId, s.Date)))
             {
                 var ordered = group.OrderBy(s => s.StartTime).ToList();
@@ -43,12 +44,16 @@ namespace Application.Validators
                 for (int i = 1; i < ordered.Count; i++)
                 {
                     if (latestEnding.OverlapsWith(ordered[i]))
-                        errors.Add($"{ordered[i]}: overlaps {latestEnding} in the same request");
+                        errors.Add(Overlap($"{ordered[i]}: overlaps {latestEnding} in the same request"));
                     if (ordered[i].EndTime > latestEnding.EndTime)
                         latestEnding = ordered[i];
                 }
             }
             return errors;
         }
+
+        // An overlap is about the time range, so the UI shows it under Start and End.
+        private static ValidationResult Overlap(string message) =>
+            new(message, [nameof(ShiftDto.StartTime), nameof(ShiftDto.EndTime)]);
     }
 }

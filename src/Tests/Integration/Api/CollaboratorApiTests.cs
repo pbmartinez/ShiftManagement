@@ -47,5 +47,20 @@ namespace Tests.Integration.WithDatabase
 
             response.StatusCode.Should().Be(expectedStatus);
         }
+
+        [Test]
+        public async Task Post_CountryMustBeACountryCode()
+        {
+            var collaborator = TestData.Collaborator("ana@x.com");
+            collaborator.Country = "Uruguay";
+
+            var response = await _client.PostAsJsonAsync("api/collaborator", collaborator);
+
+            using (new AssertionScope())
+            {
+                response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+                (await response.Content.ReadAsStringAsync()).Should().Contain("\"Country\":[\"Country must be a 2-letter code, e.g. UY\"]");
+            }
+        }
     }
 }

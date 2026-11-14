@@ -12,7 +12,7 @@ namespace Application.Services
         IUnitOfWork unitOfWork) : IEntityWriter<TDto>
         where TDto : DtoBase
     {
-        public Task<List<string>> AddAsync(IReadOnlyList<TDto> items, CancellationToken cancellationToken = default)
+        public Task<List<ValidationResult>> AddAsync(IReadOnlyList<TDto> items, CancellationToken cancellationToken = default)
         {
             foreach (var item in items)
                 item.GenerateIdentity();
@@ -24,12 +24,12 @@ namespace Application.Services
             }, cancellationToken);
         }
 
-        public Task<List<string>> UpdateAsync(TDto item, CancellationToken cancellationToken = default)
+        public Task<List<ValidationResult>> UpdateAsync(TDto item, CancellationToken cancellationToken = default)
         {
             return ValidateAndSaveAsync([item], ct => repository.UpdateAsync(item, ct), cancellationToken);
         }
 
-        private async Task<List<string>> ValidateAndSaveAsync(
+        private async Task<List<ValidationResult>> ValidateAndSaveAsync(
             IReadOnlyList<TDto> items,
             Func<CancellationToken, Task> save,
             CancellationToken cancellationToken)
@@ -54,9 +54,9 @@ namespace Application.Services
         }
 
         // Model binding already does this for request bodies, but imports and other callers don't go through it.
-        private static List<string> ValidateDataAnnotations(IReadOnlyList<TDto> items)
+        private static List<ValidationResult> ValidateDataAnnotations(IReadOnlyList<TDto> items)
         {
-            var errors = new List<string>();
+            var errors = new List<ValidationResult>();
             foreach (var item in items)
             {
                 var results = new List<ValidationResult>();
@@ -64,7 +64,7 @@ namespace Application.Services
                     continue;
 
                 // With several items, say which one failed.
-                errors.AddRange(results.Select(r => items.Count == 1 ? r.ErrorMessage! : $"{item}: {r.ErrorMessage}"));
+                errors.AddRange(results.Select(r => items.Count == 1 ? r : new ValidationResult($"{item}: {r.ErrorMessage}", r.MemberNames)));
             }
             return errors;
         }

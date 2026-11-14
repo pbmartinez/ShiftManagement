@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>{{ collaborator ? 'Edit collaborator' : 'New collaborator' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content class="dialog-form">
+    @for (error of formErrors(); track error) {
+      <p class="form-errors">{{ error }}</p>
+    }
+
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" />
+      @if (form.controls.name.hasError('required')) { <mat-error>Name is required</mat-error> }
+      @if (form.controls.name.hasError('server')) { <mat-error>{{ form.controls.name.getError('server') }}</mat-error> }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" />
+      @if (form.controls.email.hasError('required')) { <mat-error>Email is required</mat-error> }
+      @if (form.controls.email.hasError('email')) { <mat-error>Not a valid email address</mat-error> }
+      @if (form.controls.email.hasError('server')) { <mat-error>{{ form.controls.email.getError('server') }}</mat-error> }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Country</mat-label>
+      <mat-select formControlName="country">
+        @for (c of countries(); track c.countryCode) {
+          <mat-option [value]="c.countryCode">{{ c.name }} ({{ c.countryCode }})</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.country.hasError('required')) { <mat-error>Country is required</mat-error> }
+      @if (form.controls.country.hasError('server')) { <mat-error>{{ form.controls.country.getError('server') }}</mat-error> }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Save</button>
+  </mat-dialog-actions>
+</form>

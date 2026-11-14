@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>{{ data.shift ? 'Edit shift' : 'New shift' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content class="dialog-form">
+    @for (error of formErrors(); track error) {
+      <p class="form-errors">{{ error }}</p>
+    }
+
+    <mat-form-field>
+      <mat-label>Collaborator</mat-label>
+      <mat-select formControlName="collaboratorId">
+        @for (c of data.collaborators; track c.id) {
+          <mat-option [value]="c.id">{{ c.name }} ({{ c.email }})</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.collaboratorId.hasError('required')) { <mat-error>Choose a collaborator</mat-error> }
+      @if (form.controls.collaboratorId.hasError('server')) { <mat-error>{{ form.controls.collaboratorId.getError('server') }}</mat-error> }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Date</mat-label>
+      <input matInput [matDatepicker]="datePicker" formControlName="date" />
+      <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+      <mat-datepicker #datePicker />
+      @if (holiday()) { <mat-hint class="holiday-hint">{{ holiday() }}</mat-hint> }
+      @if (form.controls.date.hasError('required')) { <mat-error>Date is required</mat-error> }
+      @if (form.controls.date.hasError('matDatepickerParse')) { <mat-error>Not a valid date</mat-error> }
+      @if (form.controls.date.hasError('server')) { <mat-error>{{ form.controls.date.getError('server') }}</mat-error> }
+    </mat-form-field>
+
+    <div class="row">
+      <mat-form-field>
+        <mat-label>Start</mat-label>
+        <input matInput [matTimepicker]="startPicker" formControlName="startTime" />
+        <mat-timepicker-toggle matIconSuffix [for]="startPicker" />
+        <mat-timepicker #startPicker interval="30m" />
+        @if (form.controls.startTime.hasError('required')) { <mat-error>Start is required</mat-error> }
+        @if (form.controls.startTime.hasError('matTimepickerParse')) { <mat-error>Not a valid time</mat-error> }
+        @if (form.controls.startTime.hasError('server')) { <mat-error>{{ form.controls.startTime.getError('server') }}</mat-error> }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>End</mat-label>
+        <input matInput [matTimepicker]="endPicker" formControlName="endTime" />
+        <mat-timepicker-toggle matIconSuffix [for]="endPicker" />
+        <mat-timepicker #endPicker interval="30m" />
+        @if (form.controls.endTime.hasError('required')) { <mat-error>End is required</mat-error> }
+        @if (form.controls.endTime.hasError('matTimepickerParse')) { <mat-error>Not a valid time</mat-error> }
+        @if (form.controls.endTime.hasError('endBeforeStart')) { <mat-error>End must be after start</mat-error> }
+        @if (form.controls.endTime.hasError('server')) { <mat-error>{{ form.controls.endTime.getError('server') }}</mat-error> }
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Save</button>
+  </mat-dialog-actions>
+</form>
