@@ -53,16 +53,18 @@ builder.Services.AddScoped<IExportShifts, ExportExcelShifts>();
 
 var app = builder.Build();
 
+// Creates or updates the database schema on start, so a fresh database (e.g. docker compose) needs no extra step.
+using (var scope = app.Services.CreateScope())
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+
 // Serves the built Angular app (wwwroot) in production, so UI and API share one origin.
 app.UseDefaultFiles();
 app.MapStaticAssets();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
-}
+// API docs in every environment: Swagger UI at /swagger, OpenAPI document at /openapi/v1.json.
+app.UseSwagger();
+app.UseSwaggerUI();
+app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
