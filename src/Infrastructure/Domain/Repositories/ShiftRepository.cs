@@ -24,6 +24,7 @@ namespace Infrastructure.Domain.Repositories
             CancellationToken cancellationToken = default)
         {
             return GetByQueryAsync(
+                includes: ["Collaborator"],
                 predicate: s => collaboratorIds.Contains(s.CollaboratorId) && s.Date >= from && s.Date <= to,
                 cancellationToke: cancellationToken);
         }

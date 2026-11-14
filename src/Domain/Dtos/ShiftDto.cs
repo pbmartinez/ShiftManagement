@@ -23,6 +23,9 @@ namespace Domain.Dtos
             other.StartTime < EndTime &&
             StartTime < other.EndTime;
 
+        public override string ToString() =>
+            $"{Collaborator?.Email ?? CollaboratorId.ToString()} {Date:yyyy-MM-dd} {StartTime:HH\\:mm}-{EndTime:HH\\:mm}";
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndTime <= StartTime)

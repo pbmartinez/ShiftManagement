@@ -12,8 +12,12 @@ namespace Api.Controllers
         private readonly ILoadShifts _loadShifts;
         private readonly IShiftImportService _shiftImportService;
 
-        public ShiftController(IShiftRepository repository, ILoadShifts loadShifts, IShiftImportService shiftImportService)
-            : base(repository)
+        public ShiftController(
+            IShiftRepository repository,
+            IEntityWriter<ShiftDto> writer,
+            ILoadShifts loadShifts,
+            IShiftImportService shiftImportService)
+            : base(repository, writer)
         {
             _loadShifts = loadShifts;
             _shiftImportService = shiftImportService;
@@ -30,7 +34,7 @@ namespace Api.Controllers
 
             return errors.Count == 0
                 ? Ok(new { imported = shifts.Count })
-                : BadRequest(new { errors });
+                : BusinessErrors(errors);
         }
     }
 }

@@ -1,5 +1,6 @@
 using Application.Abstractions;
 using Application.Services;
+using Application.Validators;
 using AutoMapper.Extensions.ExpressionMapping;
 using Domain.Dtos;
 using Domain.IRepositories;
@@ -23,6 +24,12 @@ builder.Services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IShiftImportService, ShiftImportService>();
+
+builder.Services.AddScoped<IRepository<ShiftDto>>(sp => sp.GetRequiredService<IShiftRepository>());
+builder.Services.AddScoped<IRepository<CollaboratorDto>>(sp => sp.GetRequiredService<ICollaboratorRepository>());
+builder.Services.AddScoped(typeof(IEntityWriter<>), typeof(EntityWriter<>));
+
+builder.Services.AddScoped<IBusinessValidator<ShiftDto>, ShiftOverlapValidator>();
 
 builder.Services.AddAutoMapper(configuration =>
 {

@@ -1,4 +1,5 @@
-﻿using Domain.Dtos;
+﻿using Application.Abstractions;
+using Domain.Dtos;
 using Domain.IRepositories;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +15,12 @@ namespace WebApi.Controllers
         where TEntityDto : DtoBase
     {
         protected readonly IRepository<TEntityDto> Repository;
+        protected readonly IEntityWriter<TEntityDto> Writer;
 
-        protected ApiBaseController(IRepository<TEntityDto> repository)
+        protected ApiBaseController(IRepository<TEntityDto> repository, IEntityWriter<TEntityDto> writer)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            Writer = writer ?? throw new ArgumentNullException(nameof(writer));
         }
 
         [HttpGet]
@@ -44,10 +47,9 @@ namespace WebApi.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> Post(TEntityDto item, CancellationToken cancellationToken = default)
         {
-            if (item.IsTransient())
-                item.GenerateIdentity();
-            await Repository.AddAsync(item, cancellationToken);
-            await Repository.CommitChangesAsync(cancellationToken);
+            var errors = await Writer.AddAsync([item], cancellationToken);
+            if (errors.Count > 0)
+                return BusinessErrors(errors);
             return CreatedAtAction(nameof(Get), new { id = item.Id }, item);
         }
 
@@ -59,8 +61,10 @@ namespace WebApi.Controllers
             var itemTarget = await Repository.GetAsync(id, cancellationToken: cancellationToken);
             if (itemTarget == null)
                 return NotFound();
-            await Repository.UpdateAsync(item, cancellationToken);
-            await Repository.CommitChangesAsync(cancellationToken);
+            item.Id = id;
+            var errors = await Writer.UpdateAsync(item, cancellationToken);
+            if (errors.Count > 0)
+                return BusinessErrors(errors);
             return NoContent();
         }
         [HttpPatch("{id}")]
@@ -75,8 +79,9 @@ namespace WebApi.Controllers
             patchDocument.ApplyTo(item);
             if (!TryValidateModel(item))
                 return ValidationProblem(ModelState);
-            await Repository.UpdateAsync(item, cancellationToken);
-            await Repository.CommitChangesAsync(cancellationToken);
+            var errors = await Writer.UpdateAsync(item, cancellationToken);
+            if (errors.Count > 0)
+                return BusinessErrors(errors);
             return NoContent();
         }
         [HttpDelete("{id}")]
@@ -90,6 +95,13 @@ namespace WebApi.Controllers
             await Repository.DeleteAsync(id, cancellationToken);
             await Repository.CommitChangesAsync(cancellationToken);
             return NoContent();
+        }
+
+        protected ActionResult BusinessErrors(List<string> errors)
+        {
+            foreach (var error in errors)
+                ModelState.AddModelError(string.Empty, error);
+            return ValidationProblem(ModelState);
         }
 
         public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
