@@ -33,7 +33,7 @@ namespace Tests.Unit
         {
             var errors = await _service.ImportAsync(rows.Select(r => TestData.Shift(r)).ToList());
 
-            errors.Should().ContainSingle().Which.Should().Contain(expectedError);
+            errors.Should().ContainSingle().Which.ErrorMessage.Should().Contain(expectedError);
             _writer.VerifyNoOtherCalls();
         }
 

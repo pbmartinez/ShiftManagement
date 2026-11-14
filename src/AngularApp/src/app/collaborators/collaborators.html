@@ -1,0 +1,52 @@
+<div class="page-header">
+  <h1>Collaborators</h1>
+  <button mat-flat-button (click)="open()"><mat-icon>add</mat-icon> New collaborator</button>
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Name contains</mat-label>
+    <input matInput formControlName="name" />
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Email contains</mat-label>
+    <input matInput formControlName="email" />
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Country contains</mat-label>
+    <input matInput formControlName="country" />
+  </mat-form-field>
+  <button mat-button type="button" (click)="filters.reset()">Clear</button>
+</form>
+
+@if (error()) {
+  <p class="form-errors">{{ error() }}</p>
+}
+
+<table mat-table [dataSource]="dataSource" matSort class="grid">
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+    <td mat-cell *matCellDef="let c">{{ c.name }}</td>
+  </ng-container>
+  <ng-container matColumnDef="email">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+    <td mat-cell *matCellDef="let c">{{ c.email }}</td>
+  </ng-container>
+  <ng-container matColumnDef="country">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Country</th>
+    <td mat-cell *matCellDef="let c">{{ c.country }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef></th>
+    <td mat-cell *matCellDef="let c" class="actions">
+      <button mat-icon-button matTooltip="Edit" (click)="open(c)"><mat-icon>edit</mat-icon></button>
+      <button mat-icon-button matTooltip="Delete" (click)="remove(c)"><mat-icon>delete</mat-icon></button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  <tr class="mat-row" *matNoDataRow>
+    <td class="empty" [attr.colspan]="columns.length">No collaborators</td>
+  </tr>
+</table>

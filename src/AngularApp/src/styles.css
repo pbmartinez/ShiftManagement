@@ -1,0 +1,68 @@
+/* Shared layout for the pages (Shifts, Collaborators) */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  margin: 0 auto 0 0;
+  font: var(--mat-sys-headline-small);
+}
+
+.page-header h2 {
+  margin: 0 auto 0 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.import-errors {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--mat-sys-error);
+  border-radius: 8px;
+  color: var(--mat-sys-error);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 12px;
+  margin-top: 16px;
+}
+
+.grid {
+  width: 100%;
+}
+
+.grid .actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.form-errors {
+  color: var(--mat-sys-error);
+  margin: 0 0 12px;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  min-width: 360px;
+}
+
+.dialog-form .row {
+  display: flex;
+  gap: 12px;
+}
+
+.dialog-form .row > * {
+  flex: 1;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
