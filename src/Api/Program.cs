@@ -41,6 +41,7 @@ builder.Services.AddAutoMapper(configuration =>
 
 builder.Services.AddScoped<IHolidayDates, HolidayDates>();
 builder.Services.AddScoped<ILoadShifts, LoadExcelShifts>();
+builder.Services.AddScoped<IExportShifts, ExportExcelShifts>();
 
 var app = builder.Build();
 

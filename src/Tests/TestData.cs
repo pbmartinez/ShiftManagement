@@ -91,10 +91,13 @@ namespace Tests
             return stream.ToArray();
         }
 
-        public static IFormFile ExcelFile(string cellKind, params string[] rows)
-        {
-            var bytes = ExcelBytes(cellKind, rows);
-            return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", "shifts.xlsx");
-        }
+        public static IFormFile ExcelFile(string cellKind, params string[] rows) => FormFile(ExcelBytes(cellKind, rows));
+
+        public static IFormFile FormFile(byte[] bytes) =>
+            new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", "shifts.xlsx");
+
+        /// <summary>The opposite of Shift(row): "email|date|start|end".</summary>
+        public static string Row(ShiftDto shift) =>
+            $"{shift.Collaborator?.Email}|{shift.Date:yyyy-MM-dd}|{shift.StartTime:HH:mm}|{shift.EndTime:HH:mm}";
     }
 }

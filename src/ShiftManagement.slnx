@@ -19,6 +19,6 @@
     </Project>
   </Folder>
   <Folder Name="/4-Tests/">
-    <Project Path="Tests/Tests.csproj" />
+    <Project Path="Tests/Tests.csproj" Id="43989226-ad75-4629-bc05-028fb0b82b18" />
   </Folder>
 </Solution>

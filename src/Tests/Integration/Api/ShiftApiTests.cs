@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using FluentAssertions.Execution;
+using Infrastructure.Application;
 
 namespace Tests.Integration.WithDatabase
 {
@@ -80,6 +81,24 @@ namespace Tests.Integration.WithDatabase
             await AssertResponse(response, expectedStatus, expectedText);
             var collaborators = await _client.GetFromJsonAsync<List<CollaboratorDto>>("api/collaborator");
             collaborators.Should().HaveCount(2, "an import must never create collaborators");
+        }
+
+        [Test]
+        public async Task Export_ReturnsEveryShiftAsAnExcelFile()
+        {
+            var response = await _client.GetAsync("api/Shift/export");
+            var file = TestData.FormFile(await response.Content.ReadAsByteArrayAsync());
+            var exported = await new LoadExcelShifts().LoadShiftsFromFile(file);
+
+            using (new AssertionScope())
+            {
+                response.StatusCode.Should().Be(HttpStatusCode.OK);
+                response.Content.Headers.ContentType!.MediaType.Should().Be("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                response.Content.Headers.ContentDisposition!.FileName.Should().Be("shifts.xlsx");
+                exported.Select(TestData.Row).Should().Equal(
+                    "ana@x.com|2026-11-13|09:00|10:00",
+                    "bob@x.com|2026-11-13|12:00|13:00");
+            }
         }
 
         // ---- Known gaps: the behaviour we want, skipped until fixed ----

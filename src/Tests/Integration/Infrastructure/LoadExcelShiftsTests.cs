@@ -14,8 +14,7 @@ namespace Tests.Integration
             var shifts = await new LoadExcelShifts().LoadShiftsFromFile(TestData.ExcelFile(cellKind, rows));
 
             // Header row skipped, and every value comes back as it was written.
-            shifts.Select(s => $"{s.Collaborator!.Email}|{s.Date:yyyy-MM-dd}|{s.StartTime:HH:mm}|{s.EndTime:HH:mm}")
-                .Should().Equal(rows);
+            shifts.Select(TestData.Row).Should().Equal(rows);
         }
     }
 }

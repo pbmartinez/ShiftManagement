@@ -9,18 +9,23 @@ namespace Api.Controllers
     [Route("api/Shift")]
     public class ShiftController : ApiBaseController<ShiftDto>
     {
+        private const string ExcelContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
         private readonly ILoadShifts _loadShifts;
         private readonly IShiftImportService _shiftImportService;
+        private readonly IExportShifts _exportShifts;
 
         public ShiftController(
             IShiftRepository repository,
             IEntityWriter<ShiftDto> writer,
             ILoadShifts loadShifts,
-            IShiftImportService shiftImportService)
+            IShiftImportService shiftImportService,
+            IExportShifts exportShifts)
             : base(repository, writer)
         {
             _loadShifts = loadShifts;
             _shiftImportService = shiftImportService;
+            _exportShifts = exportShifts;
         }
 
         [HttpPost("import")]
@@ -35,6 +40,17 @@ namespace Api.Controllers
             return errors.Count == 0
                 ? Ok(new { imported = shifts.Count })
                 : BusinessErrors(errors);
+        }
+
+        [HttpGet("export")]
+        public async Task<IActionResult> Export(CancellationToken cancellationToken = default)
+        {
+            var shifts = await Repository.GetAllAsync(
+                includes: ["Collaborator"],
+                order: new() { ["Date"] = true, ["StartTime"] = true },
+                cancellationToken: cancellationToken);
+
+            return File(_exportShifts.ExportShiftsToFile(shifts), ExcelContentType, "shifts.xlsx");
         }
     }
 }
